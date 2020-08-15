@@ -1,0 +1,39 @@
+#!/bin/bash
+# run rclone sync to backup user files
+# opts:
+#   -d
+#       run rclone sync as a --dry-run, i.e.,
+#       don't make changes but see what would happen
+
+
+
+# define source and remote destinations
+source_dir=~/docs/
+remote_dir=remote:
+
+# define logfile
+log_file=~/synclog.txt
+
+# define target subdirectories to be synced
+#target_dirs=('finance') # for dev only
+target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
+
+while getopts ":d" opt; do
+    case $opt in
+        d) dry_run=true                         ;;
+        \?) echo "Invalid option: -$OPTARG" >&2 ;;
+    esac
+done
+
+for folder in "${target_dirs[@]}"
+    do
+        sync_status="Syncing $folder folder"
+        if [ "$dry_run" = true ] ; then
+            sync_status="$sync_status as a dry run"
+            echo $sync_status
+            rclone sync $source_dir/$folder $remote_dir$folder -v --dry-run 2>&1 | tee -a ${log_file}
+        else
+            echo $sync_status
+            rclone sync $source_dir/$folder $remote_dir$folder -v 2>&1 | tee -a ${log_file}
+        fi
+    done
