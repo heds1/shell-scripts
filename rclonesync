@@ -1,15 +1,15 @@
 #!/bin/bash
-# run rclone sync to backup user files
+# run rclone sync to backup user files.
+# currently lives in $HOME/.local/bin
+# usage: $ rclonesync
+#
 # opts:
-#   -d
-#       run rclone sync as a --dry-run, i.e.,
+#   -t
+#       test: run rclone sync as a --dry-run, i.e.,
 #       don't make changes but see what would happen
-
-
-
-# define source and remote destinations
-source_dir=~/docs/
-remote_dir=remote:
+#  -d
+#       download changes from remote, rather than
+#       upload changes (which is default)
 
 # define logfile
 log_file=~/synclog.txt
@@ -18,12 +18,29 @@ log_file=~/synclog.txt
 #target_dirs=('finance') # for dev only
 target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
 
-while getopts ":d" opt; do
+# explicity define vars in this env
+dry_run=false
+download=false
+
+# get options
+while getopts ":td" opt; do
     case $opt in
-        d) dry_run=true                         ;;
-        \?) echo "Invalid option: -$OPTARG" >&2 ;;
+        d) download=true                          ;;
+        t) dry_run=true                           ;;
+        \?) echo "Invalid option: -$OPTARG" >&2   ;;
     esac
 done
+
+# define source and remote destinations
+if [ "$download" = true ] ; then
+    echo Downloading files...
+    source_dir=remote:
+    dest_dir=~/docs/
+else
+    echo Uploading files...
+    source_dir=~/docs/
+    dest_dir=remote:
+fi
 
 for folder in "${target_dirs[@]}"
     do
@@ -31,9 +48,9 @@ for folder in "${target_dirs[@]}"
         if [ "$dry_run" = true ] ; then
             sync_status="$sync_status as a dry run"
             echo $sync_status
-            rclone sync $source_dir/$folder $remote_dir$folder -v --dry-run 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder -v --dry-run 2>&1 | tee -a ${log_file}
         else
             echo $sync_status
-            rclone sync $source_dir/$folder $remote_dir$folder -v 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder -v 2>&1 | tee -a ${log_file}
         fi
     done
