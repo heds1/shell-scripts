@@ -1,0 +1,41 @@
+#!/bin/bash
+# newdjango
+# a series of bash commands to create a new django project
+# template, along with documentation (/docs folder, README.md),
+# .gitignore, virtual environment, etc.
+# this will also create the root project directory, so there is no need 
+# to mkdir beforehand.
+# usage: $ newdjango -n projectname
+# opts:
+#   -n
+#       name: name of project
+
+# get name of project
+while getopts ":n:" opt; do
+    case $opt in
+        n) project_name="$OPTARG"         ;;
+        \?) echo "Flag not recognized"    ;;
+    esac
+done
+
+if [ "$project_name" != "" ]; then
+    echo "Creating $project_name project..."
+    mkdir "$project_name"                       # create root project directory
+    python3 -m venv env                         # create virtual environment
+    pip install django                          # install django
+    django-admin startproject .                 # create django project
+    cd "$project_name"                          # navigate to directory
+    mkdir docs                                  # make docs directory
+    echo -e "#\$project_name" > README.md       # create README file
+    git init                                    # initialise git repo
+    echo -e "*.pyc \nenv" > .gitignore          # create gitignore file
+    pip freeze > requirements.txt               # create requirements.txt file
+
+
+
+else
+    echo 'Provide a project name with the -n flag.'       
+fi
+
+
+
