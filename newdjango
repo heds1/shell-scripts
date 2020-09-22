@@ -21,16 +21,17 @@ done
 if [ "$project_name" != "" ]; then
     echo "Creating $project_name project..."
     mkdir "$project_name"                       # create root project directory
-    python3 -m venv env                         # create virtual environment
-    pip install django                          # install django
-    django-admin startproject .                 # create django project
     cd "$project_name"                          # navigate to directory
+    python3 -m venv env                         # create virtual environment
+    source env/bin/activate                     # activate virtual environment
+    pip install django                          # install django
+    django-admin startproject config .          # create django project (with config name)
     mkdir docs                                  # make docs directory
     echo -e "#\$project_name" > README.md       # create README file
     git init                                    # initialise git repo
     echo -e "*.pyc \nenv" > .gitignore          # create gitignore file
     pip freeze > requirements.txt               # create requirements.txt file
-
+    deactivate                                  # deactivate virtual environment
 
 
 else
