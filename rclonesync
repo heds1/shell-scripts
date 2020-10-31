@@ -1,12 +1,11 @@
 #!/bin/bash
 # run rclone sync to backup user files.
 # currently lives in $HOME/.local/bin
-# usage: $ rclonesync
+# usage: $ rclonesync -ug
 #
 # opts:
-#   -t
-#       test: run rclone sync as a --dry-run, i.e.,
-#       don't make changes but see what would happen
+#   -g
+#       go: run rclone sync without --dry-run flag
 #   -d
 #       download changes from remote, rather than
 #       upload changes
@@ -19,19 +18,20 @@
 log_file=~/synclog.txt
 
 # define target subdirectories to be synced
-target_dirs=('testdir') # for dev only
-#target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
+#target_dirs=('testdir') # for dev only
+target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
 
-# explicity define vars in this env
-dry_run=false
-download=false
+# dry_run should be true by default!
+# i.e., don't make changes but see what would happen.
+# change with -g argument (for 'go').
+dry_run=true
 
 # get options
 while getopts ":tdu" opt; do
     case $opt in
         d) download=true                          ;;
         u) upload=true                            ;;
-        t) dry_run=true                           ;;
+        g) dry_run=false                          ;;
         \?) echo "Invalid option: -$OPTARG" >&2   ;;
     esac
 done
