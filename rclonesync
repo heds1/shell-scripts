@@ -7,39 +7,53 @@
 #   -t
 #       test: run rclone sync as a --dry-run, i.e.,
 #       don't make changes but see what would happen
-#  -d
+#   -d
 #       download changes from remote, rather than
-#       upload changes (which is default)
+#       upload changes
+#   -u
+#       upload changes from local to remote,
+#       rather than download
+
 
 # define logfile
 log_file=~/synclog.txt
 
 # define target subdirectories to be synced
-#target_dirs=('finance') # for dev only
-target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
+target_dirs=('testdir') # for dev only
+#target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
 
 # explicity define vars in this env
 dry_run=false
 download=false
 
 # get options
-while getopts ":td" opt; do
+while getopts ":tdu" opt; do
     case $opt in
         d) download=true                          ;;
+        u) upload=true                            ;;
         t) dry_run=true                           ;;
         \?) echo "Invalid option: -$OPTARG" >&2   ;;
     esac
 done
+
+# don't allow -u and -d at the same time!
+if [ "$download" = true ] && [ "$upload" = true ] ; then
+    echo "You can only supply one of -u and -d."
+    exit 1
+fi
 
 # define source and remote destinations
 if [ "$download" = true ] ; then
     echo Downloading files...
     source_dir=remote:
     dest_dir=~/docs/
-else
+elif [ "$upload" = true ] ; then
     echo Uploading files...
     source_dir=~/docs/
     dest_dir=remote:
+else
+    echo "Please supply a -u or -d flag."
+    exit 1
 fi
 
 for folder in "${target_dirs[@]}"
