@@ -1,7 +1,7 @@
 #!/bin/bash
 # run rclone sync to backup user files.
 # currently lives in $HOME/.local/bin
-# usage: $ rclonesync -ug
+# usage: $ rcs -ug
 #
 # opts:
 #   -g
@@ -18,8 +18,8 @@
 log_file=~/synclog.txt
 
 # define target subdirectories to be synced
-#target_dirs=('testdir') # for dev only
-target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
+target_dirs=('testdir') # for dev only
+# target_dirs=('code' 'financial' 'personal' 'media')
 
 # dry_run should be true by default!
 # i.e., don't make changes but see what would happen.
@@ -27,7 +27,7 @@ target_dirs=('employment' 'finance' 'pics' 'notes' 'personal')
 dry_run=true
 
 # get options
-while getopts ":tdu" opt; do
+while getopts ":dug" opt; do
     case $opt in
         d) download=true                          ;;
         u) upload=true                            ;;
@@ -62,9 +62,21 @@ for folder in "${target_dirs[@]}"
         if [ "$dry_run" = true ] ; then
             sync_status="$sync_status as a dry run"
             echo $sync_status
-            rclone sync $source_dir$folder $dest_dir$folder -v --dry-run 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder -v --dry-run --drive-chunk-size 512M --transfers=75 --fast-list 2>&1 | tee -a ${log_file}
         else
             echo $sync_status
-            rclone sync $source_dir$folder $dest_dir$folder -v 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder -v --drive-chunk-size 512M --transfers=75 --fast-list 2>&1 | tee -a ${log_file}
         fi
     done
+
+# note some flags can speed up the upload process
+# which has been fucking slow for me recently
+# e.g.
+# rclone sync source remote -P --drive-chunk-size 512M --max-backlog 999999
+# --transfers=75 --fast-list
+
+# i believe --check-first is basically the same as --max-backlog 999999
+
+# transfers seemed to increase from default, 20, 40, 60 - then
+# decrease speed at 100. So went with 75, might not be optimal.
+# --drive-chunk-size decreased at 1024 cf 512.
