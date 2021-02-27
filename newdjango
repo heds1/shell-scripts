@@ -2,7 +2,7 @@
 # newdjango
 # a series of bash commands to create a new django project
 # template, along with documentation (/docs folder, README.md),
-# .gitignore, virtual environment, etc.
+# .gitignore, etc.
 # this will also create the root project directory, so there is no need 
 # to mkdir beforehand.
 # usage: $ newdjango -n projectname

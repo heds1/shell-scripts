@@ -12,14 +12,12 @@
 #   -u
 #       upload changes from local to remote,
 #       rather than download
-
+#   -t
+#       targets: specify a single folder name in ~/docs,
+#       or write 'all' to sync all folders. required flag.
 
 # define logfile
 log_file=~/synclog.txt
-
-# define target subdirectories to be synced
-target_dirs=('testdir') # for dev only
-# target_dirs=('code' 'financial' 'personal' 'media')
 
 # dry_run should be true by default!
 # i.e., don't make changes but see what would happen.
@@ -27,14 +25,34 @@ target_dirs=('testdir') # for dev only
 dry_run=true
 
 # get options
-while getopts ":dug" opt; do
+# t: means we require the -t tag, with parameters
+targets=false
+while getopts ":dugt:" opt; do
     case $opt in
         d) download=true                          ;;
         u) upload=true                            ;;
         g) dry_run=false                          ;;
+        t) targets=${OPTARG}               ;;
         \?) echo "Invalid option: -$OPTARG" >&2   ;;
     esac
 done
+
+# check that targets have been supplied
+if [ ! $targets ] ; then
+    echo "-t with an argument must be specified."
+    exit 1
+fi
+
+# decide whether to sync all folders or just a selected folder
+if [ "$targets" == "all" ] ; then
+    echo "Syncing all folders!"
+    target_dirs=('code' 'financial' 'personal' 'media')
+else
+    echo "Syncing $targets folder only!"
+    target_dirs=$targets
+fi
+
+
 
 # don't allow -u and -d at the same time!
 if [ "$download" = true ] && [ "$upload" = true ] ; then
@@ -45,12 +63,12 @@ fi
 # define source and remote destinations
 if [ "$download" = true ] ; then
     echo Downloading files...
-    source_dir=remote:
+    source_dir=remote-crypt:
     dest_dir=~/docs/
 elif [ "$upload" = true ] ; then
     echo Uploading files...
     source_dir=~/docs/
-    dest_dir=remote:
+    dest_dir=remote-crypt:
 else
     echo "Please supply a -u or -d flag."
     exit 1
@@ -62,10 +80,20 @@ for folder in "${target_dirs[@]}"
         if [ "$dry_run" = true ] ; then
             sync_status="$sync_status as a dry run"
             echo $sync_status
-            rclone sync $source_dir$folder $dest_dir$folder -v --dry-run --drive-chunk-size 512M --transfers=75 --fast-list 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder \
+                --dry-run \
+                -v \
+                --drive-chunk-size 512M \
+                --transfers=20 \
+                --fast-list \
+                2>&1 | tee -a ${log_file}
         else
             echo $sync_status
-            rclone sync $source_dir$folder $dest_dir$folder -v --drive-chunk-size 512M --transfers=75 --fast-list 2>&1 | tee -a ${log_file}
+            rclone sync $source_dir$folder $dest_dir$folder \
+                -v \
+                --drive-chunk-size 512M \
+                --transfers=20 \
+                --fast-list 2>&1 | tee -a ${log_file}
         fi
     done
 
